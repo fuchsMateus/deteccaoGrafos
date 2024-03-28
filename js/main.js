@@ -1,16 +1,16 @@
-import { escalaCinza, suavizacaoGaussiana, filtroSobel } from './preprocessamento.js';
+import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar } from './preprocessamento.js';
 
 const maxTamanhoImagem = 400;
-let img;
+const limiarBinarizacao = 128;
 
 const canvas = document.getElementById('imagem-canvas');
 const canvasGrafo = document.getElementById('grafo-canvas')
 const ctx = canvas.getContext('2d');
 const ctxGrafo = canvasGrafo.getContext('2d');
 
-
 const btnProcessar = document.getElementById('btn-processar');
 
+let img;
 document.getElementById('input-imagem').addEventListener('change', function (e) {
 
   let reader = new FileReader();
@@ -66,6 +66,7 @@ async function processar() {
     escalaCinza(imageData);
     suavizacaoGaussiana(imageData, w, h);
     filtroSobel(imageData, w, h);
+    binarizar(imageData, limiarBinarizacao);
     //
 
     ctxGrafo.putImageData(imageData, 0, 0);

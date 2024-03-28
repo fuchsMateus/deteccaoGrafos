@@ -90,3 +90,16 @@ export function filtroSobel(imageData, w ,h) {
         data[i] = sobelData[i];
     }
 }
+
+export function binarizar(imageData, limiar){
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        if(data[i] >= limiar){
+            data[i] = data[i + 1] = data[i + 2] = 255;
+        }
+        else{
+            data[i] = data[i + 1] = data[i + 2] = 0;
+        }
+    }
+}
