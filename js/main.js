@@ -3,6 +3,8 @@ let img;
 let canvas = document.getElementById('imagem-canvas');
 let ctx = canvas.getContext('2d');
 
+const btnProcessar = document.getElementById('btn-processar');
+
 document.getElementById('input-imagem').addEventListener('change', function (e) {
 
   let reader = new FileReader();
@@ -27,8 +29,21 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      btnProcessar.onclick = () => {
+        btnProcessar.setAttribute('aria-busy', 'true');
+        setTimeout(() => {
+          processar(img, ctx, canvas.width, canvas.height)
+            .finally(() => {
+              btnProcessar.removeAttribute('aria-busy');
+            });
+        }, 10);
+      };
+
     };
     img.src = event.target.result;
   };
   reader.readAsDataURL(e.target.files[0]);
 });
+
+async function processar() {}
