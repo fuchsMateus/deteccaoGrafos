@@ -1,3 +1,5 @@
+import { escalaCinza } from './preprocessamento.js';
+
 const maxTamanhoImagem = 400;
 let img;
 
@@ -42,7 +44,7 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
       btnProcessar.onclick = () => {
         btnProcessar.setAttribute('aria-busy', 'true');
         setTimeout(() => {
-          processar(img, ctx, canvas.width, canvas.height)
+          processar()
             .finally(() => {
               btnProcessar.removeAttribute('aria-busy');
             });
@@ -56,5 +58,12 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
 });
 
 async function processar() {
-    
+    const w = canvas.width;
+    const h = canvas.height;
+    let imageData = ctx.getImageData(0, 0, w, h);
+
+    escalaCinza(imageData);
+
+    /////
+    ctxGrafo.putImageData(imageData, 0, 0);
 }
