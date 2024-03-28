@@ -1,4 +1,5 @@
 import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar } from './preprocessamento.js';
+import { fechamento } from './op_morfologico.js';
 
 const maxTamanhoImagem = 400;
 const limiarBinarizacao = 128;
@@ -67,6 +68,13 @@ async function processar() {
     suavizacaoGaussiana(imageData, w, h);
     filtroSobel(imageData, w, h);
     binarizar(imageData, limiarBinarizacao);
+    fechamento(imageData, w, h, [
+        [1,1,1,1,1],
+        [1,1,1,1,1],
+        [1,1,1,1,1],
+        [1,1,1,1,1],
+        [1,1,1,1,1]
+    ]);
     //
 
     ctxGrafo.putImageData(imageData, 0, 0);

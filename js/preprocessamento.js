@@ -26,10 +26,9 @@ export function suavizacaoGaussiana(imageData, w ,h){
 
     for (let y = dViz; y < h - dViz; y++) {
         for (let x = dViz; x < w - dViz; x++) {
-
             let px = (y * w + x) * 4;
-
             let soma = 0;
+
             for (let ky = -dViz; ky <= dViz; ky++) {
                 for (let kx = -dViz; kx <= dViz; kx++) {
                     let p = ((y + ky) * w + (x + kx)) * 4;
@@ -43,6 +42,7 @@ export function suavizacaoGaussiana(imageData, w ,h){
             gaussData[px + 3] = 255; 
         }
     }
+    
     for (let i = 0; i < gaussData.length; i++) {
         data[i] = gaussData[i];
     }
