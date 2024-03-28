@@ -24,9 +24,14 @@ export function suavizacaoGaussiana(imageData, w ,h){
     //Tamanho da vizinhança do kernel a partir do ponto central
     let dViz = 2;
 
-    for (let y = dViz; y < h - dViz; y++) {
-        for (let x = dViz; x < w - dViz; x++) {
+    for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
             let px = (y * w + x) * 4;
+            if(y<dViz || y >= h-dViz || x<dViz || x >= w-dViz){
+                gaussData[px] = gaussData[px + 1] = gaussData[px + 2] = imageData.data[px];
+                gaussData[px + 3] = 255; 
+                continue;
+            }
             let soma = 0;
 
             for (let ky = -dViz; ky <= dViz; ky++) {
