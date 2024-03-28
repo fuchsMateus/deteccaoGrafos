@@ -1,5 +1,6 @@
 import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar, removerRotulos } from './preprocessamento.js';
 import { fechamento, afinar } from './op_morfologico.js';
+import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';
 import { aumentarBorda } from './util.js'
 
 
@@ -78,4 +79,46 @@ async function processar() {
     afinar(imageData, w, h);
     //
     ctxPre.putImageData(imageData, 0, 0);
+
+    console.log(getCirculos(imageData, w, h));
 }
+
+
+
+function getCirculos(imageData, w, h) {
+    const [acumulador, valorMaximo] = votacao(criarAcumulador(w, h), imageData);
+    let picos = picosNMS(acumulador, valorMaximo);
+
+    if (picos.length == 0) return;
+
+    let circulos = [];
+    let valoresRaios = {}
+    picos.forEach(pico => {
+        let [r, b, a] = pico;
+
+        if (valoresRaios[r] == null) valoresRaios[r] = 1;
+        else valoresRaios[r]++
+
+        circulos.push({ r, b, a })
+    });
+    let raiosOrdenados = Object.entries(valoresRaios).sort((a, b) => b[1] - a[1]);
+
+    function circulosSeInterceptam(c1, c2) {
+        const distanciaCentros = Math.sqrt((c2.a - c1.a) ** 2 + (c2.b - c1.b) ** 2);
+        return distanciaCentros < (c1.r + c2.r);
+    }
+
+    for (let [r, _] of raiosOrdenados) {
+        let rInt = parseInt(r);
+        let candidatos = circulos.filter(c => c.r === rInt || c.r === rInt + 1 || c.r === rInt - 1);
+
+        let semSobreposicao = candidatos.filter((circulo, _, arr) =>
+            !arr.some(outro => circulo !== outro && circulosSeInterceptam(circulo, outro))
+        );
+
+        if (semSobreposicao.length > 0) {
+            return semSobreposicao;
+        }
+    }
+}
+
