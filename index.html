@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Detecção de Grafos</title>
+  <link rel="stylesheet" href="css/pico.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+</head>
+
+<body style="background-color: whitesmoke;"> 
+  <nav class="container-fluid">
+
+    <li><strong>Detecção de Grafos</strong></li>
+
+  </nav>
+  <main class="container">
+    <div class="grid">
+      <section>
+
+        <div>
+          <p id="msg">Carregue sua imagem</p>
+
+          <div style="display: flex; justify-content: space-between; gap: 50px;">
+            <input type="file" id="input-imagem" style="box-shadow: 1px 4px 16px rgba(0, 0, 0, 0.1);" />
+          </div>
+
+        </div>
+        <div class="canvas-container" style="margin-top: 20px;">
+          <canvas id="imagem-canvas" style="margin-right: 10px; margin-bottom: 10px;"></canvas>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="container">
+    <hr>
+    <p>Mateus Fuchs</p>
+  </footer>
+  
+
+  <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
