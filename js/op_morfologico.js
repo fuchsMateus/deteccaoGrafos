@@ -39,7 +39,7 @@ function dilatar(imageData, w, h, elementoEstruturante) {
     }
 }
 
-function erodir(imageData, w, h, elementoEstruturante){
+export function erodir(imageData, w, h, elementoEstruturante){
     const data = imageData.data;
     let eData = new Uint8ClampedArray(w * h * 4);
 
@@ -171,7 +171,7 @@ export function afinar(imageData, w, h) {
     dataAnterior = dataAtual = data;
     
     let convergencia = 0;
-    while(convergencia<10) {
+    while(convergencia<8) {
         elementosERotacoes.forEach(el => {
             let homData = transformadaHitOrMiss(dataAtual, w, h, el);
             dataAtual = subtracaoImgBinaria(dataAtual, homData);

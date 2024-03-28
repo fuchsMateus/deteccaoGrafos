@@ -1,3 +1,5 @@
+import { detectarComponentesConectados, corContorno } from "./util.js";
+
 export function escalaCinza(imageData) {
     let data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
@@ -105,6 +107,28 @@ export function binarizar(imageData, limiar){
         }
         else{
             data[i] = data[i + 1] = data[i + 2] = 0;
+        }
+    }
+}
+
+export function removerRotulos(imageData, w, h){
+    binarizar(imageData, 154);
+    let cor = corContorno(imageData);
+    let rotulos = detectarComponentesConectados(imageData, w, h, cor);
+
+    let contagemRotulos = {};
+    rotulos.forEach(rotulo => {
+        contagemRotulos[rotulo] = (contagemRotulos[rotulo] || 0) + 1;
+    });
+
+    let rotulosOrdenados = Object.entries(contagemRotulos).sort((a, b) => b[1] - a[1]);
+    let rotuloMaisFrequente = rotulosOrdenados[1][0];
+
+    let data = imageData.data;
+    for (let i = 0; i < w * h; i++) {
+        if (rotulos[i] != rotuloMaisFrequente) {
+            data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 255-cor; 
+            data[i * 4 + 3] = 255;
         }
     }
 }
