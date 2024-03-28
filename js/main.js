@@ -1,4 +1,4 @@
-import { escalaCinza, suavizacaoGaussiana } from './preprocessamento.js';
+import { escalaCinza, suavizacaoGaussiana, filtroSobel } from './preprocessamento.js';
 
 const maxTamanhoImagem = 400;
 let img;
@@ -62,9 +62,11 @@ async function processar() {
     const h = canvas.height;
     let imageData = ctx.getImageData(0, 0, w, h);
 
+    //Pré-processamento
     escalaCinza(imageData);
     suavizacaoGaussiana(imageData, w, h);
+    filtroSobel(imageData, w, h);
+    //
 
-    /////
     ctxGrafo.putImageData(imageData, 0, 0);
 }
