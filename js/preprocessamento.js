@@ -112,7 +112,7 @@ export function binarizar(imageData, limiar){
 }
 
 export function removerRotulos(imageData, w, h){
-    binarizar(imageData, 154);
+    binarizar(imageData, 164);
     let cor = corContorno(imageData);
     let rotulos = detectarComponentesConectados(imageData, w, h, cor);
 

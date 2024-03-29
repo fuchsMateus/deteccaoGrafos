@@ -4,8 +4,12 @@ import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';
 import { aumentarBorda } from './util.js'
 
 
-const maxTamanhoImagem = 380;
+const maxTamanhoImagem = 480;
 const limiarBinarizacao = 128;
+
+const radioMin = document.getElementById('radio-min');
+const radioPeq = document.getElementById('radio-peq');
+const radioMed = document.getElementById('radio-med');
 
 const canvas = document.getElementById('imagem-canvas');
 const canvasPre = document.getElementById('preprocessamento-canvas')
@@ -80,17 +84,23 @@ async function processar() {
     //
     ctxPre.putImageData(imageData, 0, 0);
 
-    console.log(getCirculos(imageData, w, h));
+    getCirculos(imageData, w, h)
 }
 
 
 
 function getCirculos(imageData, w, h) {
-    const [acumulador, valorMaximo] = votacao(criarAcumulador(w, h), imageData);
+    let razaoRaioMax;
+    if(radioMin.checked) razaoRaioMax = 19;
+    else if(radioPeq.checked) razaoRaioMax = 13;
+    else if(radioMed.checked) razaoRaioMax = 9;
+    else razaoRaioMax = 6;
+
+    const [acumulador, valorMaximo] = votacao(criarAcumulador(w, h, razaoRaioMax), imageData);
     let picos = picosNMS(acumulador, valorMaximo);
 
     if (picos.length == 0) return;
-
+    console.log(picos)
     let circulos = [];
     let valoresRaios = {}
     picos.forEach(pico => {
@@ -99,8 +109,9 @@ function getCirculos(imageData, w, h) {
         if (valoresRaios[r] == null) valoresRaios[r] = 1;
         else valoresRaios[r]++
 
-        circulos.push({ r, b, a })
+        circulos.push({ r, b, a });
     });
+    
     let raiosOrdenados = Object.entries(valoresRaios).sort((a, b) => b[1] - a[1]);
 
     function circulosSeInterceptam(c1, c2) {
@@ -110,13 +121,20 @@ function getCirculos(imageData, w, h) {
 
     for (let [r, _] of raiosOrdenados) {
         let rInt = parseInt(r);
-        let candidatos = circulos.filter(c => c.r === rInt || c.r === rInt + 1 || c.r === rInt - 1);
+        let candidatos = circulos.filter(c => c.r >= rInt -2 && c.r <= rInt + 2);
 
         let semSobreposicao = candidatos.filter((circulo, _, arr) =>
-            !arr.some(outro => circulo !== outro && circulosSeInterceptam(circulo, outro))
+            !arr.some(outro => circulo !== outro && circulosSeInterceptam(circulo, outro) && circulo.r == outro.r)
         );
 
         if (semSobreposicao.length > 0) {
+            ctxPre.strokeStyle = 'red';
+            ctxPre.lineWidth = 5;
+            semSobreposicao.forEach(c =>{
+                ctxPre.beginPath();
+                ctxPre.arc(c['a'],c['b'],c['r'],0,2* Math.PI);
+                ctxPre.stroke();
+            });
             return semSobreposicao;
         }
     }

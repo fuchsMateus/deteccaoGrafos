@@ -3,9 +3,9 @@ let rMin = 1;
 let aMax = 0;
 let bMax = 0;
 
-export function criarAcumulador(w, h) {
-    if(w>h) rMax = Math.round(h/5);
-    else rMax = Math.round(w/5);
+export function criarAcumulador(w, h, razaoRaioMax) {
+    if(w>h) rMax = Math.round(h/razaoRaioMax);
+    else rMax = Math.round(w/razaoRaioMax);
 
     aMax = w;
     bMax = h;
@@ -45,8 +45,8 @@ export function votacao(acumulador, imageData) {
 export function picosNMS(acumulador, valorMaximo) {
     let picos = [];
 
-    let limiar = Math.round(valorMaximo * 0.3);
-    let tamanhoVizinhanca = Math.ceil(0.015 * Math.sqrt(aMax*aMax + bMax*bMax));
+    let limiar = Math.round(valorMaximo * 0.4);
+    let tamanhoVizinhanca = Math.ceil(0.02 * Math.sqrt(aMax*aMax + bMax*bMax));
 
     for (let r = 0; r < rMax-rMin+1; r++) {
         for (let b = 0; b < bMax; b++) {
