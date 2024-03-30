@@ -292,7 +292,6 @@ export function detectarLinhas(imageData, w, h) {
                         p1 = pAtual;
                         visitados.add((pAtual.y * w + pAtual.x) * 4);
                         linhas.push([p0, p1]);
-                        console.log(p0,p1);
                         break;
                     }
 
@@ -323,4 +322,5 @@ export function detectarLinhas(imageData, w, h) {
 
     return linhas;
 }
+
 

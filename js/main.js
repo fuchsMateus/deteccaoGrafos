@@ -4,8 +4,7 @@ import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';
 import { aumentarBorda, detectarLinhas, corFundoImg } from './util.js'
 
 
-const maxTamanhoImagem = 580;
-const limiarBinarizacao = 128;
+const maxTamanhoImagem = 480;
 
 const radioMin = document.getElementById('radio-min');
 const radioPeq = document.getElementById('radio-peq');
@@ -19,6 +18,14 @@ const ctxPre = canvasPre.getContext('2d');
 const btnProcessar = document.getElementById('btn-processar');
 
 let img;
+let limiar;
+const inputLb = document.getElementById('input-lb');
+
+function rangeListener(){
+    document.getElementById('label-lb').innerText = `Limiar de Binarização = ${inputLb.value}`;
+}
+rangeListener();
+inputLb.addEventListener('input', rangeListener);
 
 document.getElementById('input-imagem').addEventListener('change', function (e) {
     let reader = new FileReader();
@@ -73,14 +80,15 @@ async function processar() {
     const h = canvas.height;
     ctxPre.clearRect(0, 0, w, h);
     let imageData = ctx.getImageData(0, 0, w, h);
+    limiar = inputLb.value;
 
     //Pré-processamento
     escalaCinza(imageData);
-    binarizar(imageData, limiarBinarizacao);
+    binarizar(imageData, limiar);
     removerRotulos(imageData, w, h);
     suavizacaoGaussiana(imageData, w, h);
     filtroSobel(imageData, w, h);
-    binarizar(imageData, limiarBinarizacao);
+    binarizar(imageData, limiar);
     fechamento(imageData, w, h);
     afinar(imageData, w, h);
     //
@@ -176,7 +184,7 @@ function getLinhas(imageData, w, h, circulos) {
     });
 
     let lData = ctxTemp.getImageData(0, 0, w, h);
-    binarizar(lData, limiarBinarizacao);
+    binarizar(lData, limiar);
     //ctx.putImageData(lData,0,0);
     return detectarLinhas(lData, w, h);
 }
