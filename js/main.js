@@ -1,10 +1,10 @@
 import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar, removerRotulos } from './preprocessamento.js';
 import { fechamento, afinar } from './op_morfologico.js';
 import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';
-import { aumentarBorda, detectarLinhas } from './util.js'
+import { aumentarBorda, detectarLinhas, corFundoImg } from './util.js'
 
 
-const maxTamanhoImagem = 480;
+const maxTamanhoImagem = 580;
 const limiarBinarizacao = 128;
 
 const radioMin = document.getElementById('radio-min');
@@ -45,8 +45,8 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-            let cor = ctx.getImageData(0, 0, canvas.width, canvas.height).data[0];
-            aumentarBorda(canvas, `rgb(${cor},${cor},${cor})`);
+            let cor = corFundoImg(ctx.getImageData(0, 0, canvas.width, canvas.height), canvas.width, canvas.height);
+            aumentarBorda(canvas, `rgb(${cor[0]},${cor[1]},${cor[2]})`);
 
             canvasPre.width = canvas.width;
             canvasPre.height = canvas.height;
@@ -76,6 +76,7 @@ async function processar() {
 
     //Pré-processamento
     escalaCinza(imageData);
+    binarizar(imageData, limiarBinarizacao);
     removerRotulos(imageData, w, h);
     suavizacaoGaussiana(imageData, w, h);
     filtroSobel(imageData, w, h);
@@ -169,13 +170,13 @@ function getLinhas(imageData, w, h, circulos) {
 
     circulos.forEach(c => {
         ctxTemp.beginPath();
-        ctxTemp.arc(c.a, c.b, c.r + 5, 0, 2 * Math.PI);
+        ctxTemp.arc(c.a, c.b, c.r + 50 / c.r + 4, 0, 2 * Math.PI);
         ctxTemp.fill();
         ctxTemp.stroke();
     });
 
     let lData = ctxTemp.getImageData(0, 0, w, h);
-    binarizar(lData, 128);
+    binarizar(lData, limiarBinarizacao);
     //ctx.putImageData(lData,0,0);
     return detectarLinhas(lData, w, h);
 }

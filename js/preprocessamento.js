@@ -1,4 +1,4 @@
-import { detectarComponentesConectados, corContorno } from "./util.js";
+import { detectarComponentesConectados, corContornoImgBinaria } from "./util.js";
 
 export function escalaCinza(imageData) {
     let data = imageData.data;
@@ -112,8 +112,7 @@ export function binarizar(imageData, limiar){
 }
 
 export function removerRotulos(imageData, w, h){
-    binarizar(imageData, 164);
-    let cor = corContorno(imageData);
+    let cor = corContornoImgBinaria(imageData);
     let rotulos = detectarComponentesConectados(imageData, w, h, cor);
 
     let contagemRotulos = {};
