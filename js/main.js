@@ -1,7 +1,7 @@
 import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar, removerRotulos } from './preprocessamento.js';
 import { fechamento, afinar } from './op_morfologico.js';
 import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';
-import { aumentarBorda } from './util.js'
+import { aumentarBorda, detectarLinhas } from './util.js'
 
 
 const maxTamanhoImagem = 480;
@@ -39,7 +39,7 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
                 canvas.width = img.width;
                 canvas.height = img.height;
             }
-            
+
             document.getElementById('msg').hidden = true;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -71,6 +71,7 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
 async function processar() {
     const w = canvas.width;
     const h = canvas.height;
+    ctxPre.clearRect(0, 0, w, h);
     let imageData = ctx.getImageData(0, 0, w, h);
 
     //Pré-processamento
@@ -82,25 +83,46 @@ async function processar() {
     fechamento(imageData, w, h);
     afinar(imageData, w, h);
     //
-    ctxPre.putImageData(imageData, 0, 0);
 
-    getCirculos(imageData, w, h)
+    let circulos = getCirculos(imageData, w, h);
+    if (circulos) {
+        let linhas = getLinhas(imageData, w, h, circulos);
+        ctxPre.strokeStyle = 'red';
+        ctxPre.lineWidth = 1;
+
+        circulos.forEach(c => {
+            ctxPre.beginPath();
+            ctxPre.arc(c.a, c.b, c.r, 0, 2 * Math.PI);
+            ctxPre.stroke();
+        });
+
+        linhas.forEach(l => {
+            ctxPre.strokeStyle = `rgb(${(l[0].x + l[1].x) / 2},${(l[0].y + l[1].y) / 2},${0})`;
+            ctxPre.beginPath();
+            ctxPre.moveTo(l[0].x, l[0].y);
+            ctxPre.lineTo(l[1].x, l[1].y);
+            ctxPre.stroke();
+        });
+    }
+    else {
+        ctxPre.fillStyle = "red";
+        ctxPre.font = "10px Arial";
+        ctxPre.fillText("Nenhum vértice encontrado.", (w / 2) - 17, (h / 2) + 8);
+    }
+
 }
-
-
 
 function getCirculos(imageData, w, h) {
     let razaoRaioMax;
-    if(radioMin.checked) razaoRaioMax = 19;
-    else if(radioPeq.checked) razaoRaioMax = 13;
-    else if(radioMed.checked) razaoRaioMax = 9;
+    if (radioMin.checked) razaoRaioMax = 19;
+    else if (radioPeq.checked) razaoRaioMax = 13;
+    else if (radioMed.checked) razaoRaioMax = 9;
     else razaoRaioMax = 6;
 
     const [acumulador, valorMaximo] = votacao(criarAcumulador(w, h, razaoRaioMax), imageData);
     let picos = picosNMS(acumulador, valorMaximo);
 
     if (picos.length == 0) return;
-    console.log(picos)
     let circulos = [];
     let valoresRaios = {}
     picos.forEach(pico => {
@@ -111,7 +133,7 @@ function getCirculos(imageData, w, h) {
 
         circulos.push({ r, b, a });
     });
-    
+
     let raiosOrdenados = Object.entries(valoresRaios).sort((a, b) => b[1] - a[1]);
 
     function circulosSeInterceptam(c1, c2) {
@@ -121,22 +143,40 @@ function getCirculos(imageData, w, h) {
 
     for (let [r, _] of raiosOrdenados) {
         let rInt = parseInt(r);
-        let candidatos = circulos.filter(c => c.r >= rInt -2 && c.r <= rInt + 2);
+        let candidatos = circulos.filter(c => c.r >= rInt - 2 && c.r <= rInt + 2);
 
         let semSobreposicao = candidatos.filter((circulo, _, arr) =>
             !arr.some(outro => circulo !== outro && circulosSeInterceptam(circulo, outro) && circulo.r == outro.r)
         );
 
         if (semSobreposicao.length > 0) {
-            ctxPre.strokeStyle = 'red';
-            ctxPre.lineWidth = 5;
-            semSobreposicao.forEach(c =>{
-                ctxPre.beginPath();
-                ctxPre.arc(c['a'],c['b'],c['r'],0,2* Math.PI);
-                ctxPre.stroke();
-            });
             return semSobreposicao;
         }
     }
+}
+
+function getLinhas(imageData, w, h, circulos) {
+    const canvasTemp = document.createElement('canvas');
+    const ctxTemp = canvasTemp.getContext('2d');
+    canvasTemp.width = w;
+    canvasTemp.height = h;
+
+    ctxTemp.putImageData(imageData, 0, 0);
+
+    ctxTemp.strokeStyle = "black";
+    ctxTemp.fillStyle = "black";
+    ctxTemp.lineWidth = 1;
+
+    circulos.forEach(c => {
+        ctxTemp.beginPath();
+        ctxTemp.arc(c.a, c.b, c.r + 5, 0, 2 * Math.PI);
+        ctxTemp.fill();
+        ctxTemp.stroke();
+    });
+
+    let lData = ctxTemp.getImageData(0, 0, w, h);
+    binarizar(lData, 128);
+    //ctx.putImageData(lData,0,0);
+    return detectarLinhas(lData, w, h);
 }
 
