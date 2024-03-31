@@ -86,11 +86,14 @@ async function processar() {
     escalaCinza(imageData);
     binarizar(imageData, limiar);
     removerRotulos(imageData, w, h);
+    
     suavizacaoGaussiana(imageData, w, h);
     filtroSobel(imageData, w, h);
     binarizar(imageData, limiar);
     fechamento(imageData, w, h);
     afinar(imageData, w, h);
+
+    
     //
 
     let circulos = getCirculos(imageData, w, h);
@@ -106,7 +109,8 @@ async function processar() {
         });
 
         linhas.forEach(l => {
-            ctxPre.strokeStyle = `rgb(${(l[0].x + l[1].x) / 2},${(l[0].y + l[1].y) / 2},${0})`;
+            ctxPre.strokeStyle = `rgb(${(Math.abs(l[0].x - l[1].x))*2},${(Math.abs(l[0].y - l[1].y))*2},
+            ${255 - Math.sqrt((l[0].x - l[1].x)**2 + (l[0].y - l[1].y)**2)})`;
             ctxPre.beginPath();
             ctxPre.moveTo(l[0].x, l[0].y);
             ctxPre.lineTo(l[1].x, l[1].y);
@@ -178,14 +182,14 @@ function getLinhas(imageData, w, h, circulos) {
 
     circulos.forEach(c => {
         ctxTemp.beginPath();
-        ctxTemp.arc(c.a, c.b, c.r + 50 / c.r + 4, 0, 2 * Math.PI);
+        ctxTemp.arc(c.a, c.b, c.r +50/c.r, 0, 2 * Math.PI);
         ctxTemp.fill();
         ctxTemp.stroke();
     });
 
     let lData = ctxTemp.getImageData(0, 0, w, h);
     binarizar(lData, limiar);
-    //ctx.putImageData(lData,0,0);
+    
     return detectarLinhas(lData, w, h);
 }
 
