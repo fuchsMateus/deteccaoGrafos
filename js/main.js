@@ -99,7 +99,12 @@ async function processar() {
         const rotulosPromises = circulos.map(extrairRotuloDeCirculo);
         const rotulos = await Promise.all(rotulosPromises);
         const vertices = circulos.map((circulo, index) => ({ ...circulo, rotulo: rotulos[index] }));
-        console.log(vertices);
+
+        if (vertices.every((v) => v.rotulo.length == 0)) {
+            vertices.forEach((v, indice) => {
+                v.rotulo = ''+indice;
+            });
+        }
 
         let arestas = getArestas(imageData, w, h, vertices);
         ctxPre.strokeStyle = 'red';
@@ -108,10 +113,12 @@ async function processar() {
         vertices.forEach(v => {
             ctxPre.beginPath();
             ctxPre.arc(v.a, v.b, v.r, 0, 2 * Math.PI);
+            
             ctxPre.fillStyle = "black";
-            let tamanhoRotulo = Math.floor(v.r)-1;
-            ctxPre.font = tamanhoRotulo+"px Arial";
-            ctxPre.fillText(v.rotulo, v.a - (tamanhoRotulo * v.rotulo.length)/4, v.b+ (tamanhoRotulo)/3);
+            let tamanhoRotulo = Math.floor(v.r) - 1;
+            ctxPre.font = tamanhoRotulo + "px Arial";
+            ctxPre.fillText(v.rotulo, v.a - (tamanhoRotulo * v.rotulo.length) / 4, v.b + (tamanhoRotulo) / 3);
+            
             ctxPre.stroke();
         });
 
@@ -224,11 +231,13 @@ function getArestas(imageData, w, h, vertices) {
         });
 
         if (vInicio !== vFim) {
-            let chaveAresta = [vertices[vInicio].rotulo, vertices[vFim].rotulo].sort().join('-');
-            if (!historicoArestas.has(chaveAresta)) {
-                historicoArestas.add(chaveAresta); 
-                arestas.push([linha[0], linha[1], vertices[vInicio].rotulo, vertices[vFim].rotulo]);
-            }
+                let chaveAresta = [vertices[vInicio].rotulo, vertices[vFim].rotulo].sort().join('-');
+                if (!historicoArestas.has(chaveAresta)) {
+                    historicoArestas.add(chaveAresta);
+                    arestas.push([linha[0], linha[1], vertices[vInicio].rotulo, vertices[vFim].rotulo]);
+                }
+            
+            
         }
     });
 
@@ -261,19 +270,18 @@ async function extrairRotuloDeCirculo(circulo) {
 function gerarGrafo(arestas) {
     const listaAdjacencias = {};
 
-    arestas.forEach(([_, __, rotuloVerticeInicio, rotuloVerticeFinal]) => {
-        if (!listaAdjacencias[rotuloVerticeInicio]) {
-            listaAdjacencias[rotuloVerticeInicio] = [];
+    arestas.forEach(([_, __, vInicio, vFim]) => {
+        if (!listaAdjacencias[vInicio]) {
+            listaAdjacencias[vInicio] = [];
         }
-        listaAdjacencias[rotuloVerticeInicio].push(rotuloVerticeFinal);
+        listaAdjacencias[vInicio].push(vFim);
 
-        if (!listaAdjacencias[rotuloVerticeFinal]) {
-            listaAdjacencias[rotuloVerticeFinal] = [];
+        if (!listaAdjacencias[vFim]) {
+            listaAdjacencias[vFim] = [];
         }
-        listaAdjacencias[rotuloVerticeFinal].push(rotuloVerticeInicio);
+        listaAdjacencias[vFim].push(vInicio);
     });
 
     const grafoJson = JSON.stringify(listaAdjacencias, null, 2);
-    document.getElementById('lista-adjacencias').innerHTML = "Lista de Adjacências "+grafoJson;
+    document.getElementById('lista-adjacencias').innerHTML = "Lista de Adjacências " + grafoJson;
 }
-
