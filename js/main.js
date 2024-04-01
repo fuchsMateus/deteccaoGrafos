@@ -21,7 +21,7 @@ let img;
 let limiar;
 const inputLb = document.getElementById('input-lb');
 
-function rangeListener(){
+function rangeListener() {
     document.getElementById('label-lb').innerText = `Limiar de Binarização = ${inputLb.value}`;
 }
 rangeListener();
@@ -48,6 +48,8 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
             }
 
             document.getElementById('msg').hidden = true;
+            document.getElementById('lista-adjacencias').innerHTML = '';
+
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -81,41 +83,48 @@ async function processar() {
     ctxPre.clearRect(0, 0, w, h);
     let imageData = ctx.getImageData(0, 0, w, h);
     limiar = inputLb.value;
-
     //Pré-processamento
     escalaCinza(imageData);
     binarizar(imageData, limiar);
     removerRotulos(imageData, w, h);
-    
     suavizacaoGaussiana(imageData, w, h);
     filtroSobel(imageData, w, h);
     binarizar(imageData, limiar);
     fechamento(imageData, w, h);
     afinar(imageData, w, h);
-
-    
     //
 
     let circulos = getCirculos(imageData, w, h);
     if (circulos) {
-        let linhas = getLinhas(imageData, w, h, circulos);
+        const rotulosPromises = circulos.map(extrairRotuloDeCirculo);
+        const rotulos = await Promise.all(rotulosPromises);
+        const vertices = circulos.map((circulo, index) => ({ ...circulo, rotulo: rotulos[index] }));
+        console.log(vertices);
+
+        let arestas = getArestas(imageData, w, h, vertices);
         ctxPre.strokeStyle = 'red';
         ctxPre.lineWidth = 1;
 
-        circulos.forEach(c => {
+        vertices.forEach(v => {
             ctxPre.beginPath();
-            ctxPre.arc(c.a, c.b, c.r, 0, 2 * Math.PI);
+            ctxPre.arc(v.a, v.b, v.r, 0, 2 * Math.PI);
+            ctxPre.fillStyle = "black";
+            let tamanhoRotulo = Math.floor(v.r)-1;
+            ctxPre.font = tamanhoRotulo+"px Arial";
+            ctxPre.fillText(v.rotulo, v.a - (tamanhoRotulo * v.rotulo.length)/4, v.b+ (tamanhoRotulo)/3);
             ctxPre.stroke();
         });
 
-        linhas.forEach(l => {
-            ctxPre.strokeStyle = `rgb(${(Math.abs(l[0].x - l[1].x))*2},${(Math.abs(l[0].y - l[1].y))*2},
-            ${255 - Math.sqrt((l[0].x - l[1].x)**2 + (l[0].y - l[1].y)**2)})`;
+        arestas.forEach(l => {
+            ctxPre.strokeStyle = `rgb(${(Math.abs(l[0].x - l[1].x)) * 2},${(Math.abs(l[0].y - l[1].y)) * 2},
+            ${255 - Math.sqrt((l[0].x - l[1].x) ** 2 + (l[0].y - l[1].y) ** 2)})`;
             ctxPre.beginPath();
             ctxPre.moveTo(l[0].x, l[0].y);
             ctxPre.lineTo(l[1].x, l[1].y);
             ctxPre.stroke();
         });
+
+        gerarGrafo(arestas);
     }
     else {
         ctxPre.fillStyle = "red";
@@ -168,7 +177,7 @@ function getCirculos(imageData, w, h) {
     }
 }
 
-function getLinhas(imageData, w, h, circulos) {
+function getArestas(imageData, w, h, vertices) {
     const canvasTemp = document.createElement('canvas');
     const ctxTemp = canvasTemp.getContext('2d');
     canvasTemp.width = w;
@@ -180,16 +189,91 @@ function getLinhas(imageData, w, h, circulos) {
     ctxTemp.fillStyle = "black";
     ctxTemp.lineWidth = 1;
 
-    circulos.forEach(c => {
+    vertices.forEach(v => {
         ctxTemp.beginPath();
-        ctxTemp.arc(c.a, c.b, c.r +50/c.r, 0, 2 * Math.PI);
+        ctxTemp.arc(v.a, v.b, v.r + 50 / v.r, 0, 2 * Math.PI);
         ctxTemp.fill();
         ctxTemp.stroke();
     });
 
     let lData = ctxTemp.getImageData(0, 0, w, h);
     binarizar(lData, limiar);
-    
-    return detectarLinhas(lData, w, h);
+    let linhas = detectarLinhas(lData, w, h);
+    let arestas = [];
+    let historicoArestas = new Set();
+
+    linhas.forEach((linha) => {
+        let menorDistanciaInicio = Infinity;
+        let menorDistanciaFim = Infinity;
+        let vInicio = -1;
+        let vFim = -1;
+
+        vertices.forEach((v, indice) => {
+            const distInicio = Math.sqrt(Math.pow(v.a - linha[0].x, 2) + Math.pow(v.b - linha[0].y, 2));
+            const distFim = Math.sqrt(Math.pow(v.a - linha[1].x, 2) + Math.pow(v.b - linha[1].y, 2));
+
+            if (distInicio < menorDistanciaInicio) {
+                menorDistanciaInicio = distInicio;
+                vInicio = indice;
+            }
+
+            if (distFim < menorDistanciaFim) {
+                menorDistanciaFim = distFim;
+                vFim = indice;
+            }
+        });
+
+        if (vInicio !== vFim) {
+            let chaveAresta = [vertices[vInicio].rotulo, vertices[vFim].rotulo].sort().join('-');
+            if (!historicoArestas.has(chaveAresta)) {
+                historicoArestas.add(chaveAresta); 
+                arestas.push([linha[0], linha[1], vertices[vInicio].rotulo, vertices[vFim].rotulo]);
+            }
+        }
+    });
+
+    return arestas;
+}
+
+async function extrairRotuloDeCirculo(circulo) {
+    const lado = circulo.r * Math.sqrt(2) * 0.9;
+    const canvasTesseract = document.createElement('canvas');
+    const ctxTesseract = canvasTesseract.getContext('2d');
+
+    canvasTesseract.width = lado;
+    canvasTesseract.height = lado;
+
+    ctxTesseract.drawImage(canvas, circulo.a - lado / 2, circulo.b - lado / 2, lado, lado, 0, 0, lado, lado);
+
+    const imgUrl = canvasTesseract.toDataURL();
+    const worker = await Tesseract.createWorker('eng');
+
+    await worker.setParameters({
+        tessedit_char_whitelist: '0123456789',
+    });
+
+    const { data: { text } } = await worker.recognize(imgUrl);
+    await worker.terminate();
+
+    return text.trim();
+}
+
+function gerarGrafo(arestas) {
+    const listaAdjacencias = {};
+
+    arestas.forEach(([_, __, rotuloVerticeInicio, rotuloVerticeFinal]) => {
+        if (!listaAdjacencias[rotuloVerticeInicio]) {
+            listaAdjacencias[rotuloVerticeInicio] = [];
+        }
+        listaAdjacencias[rotuloVerticeInicio].push(rotuloVerticeFinal);
+
+        if (!listaAdjacencias[rotuloVerticeFinal]) {
+            listaAdjacencias[rotuloVerticeFinal] = [];
+        }
+        listaAdjacencias[rotuloVerticeFinal].push(rotuloVerticeInicio);
+    });
+
+    const grafoJson = JSON.stringify(listaAdjacencias, null, 2);
+    document.getElementById('lista-adjacencias').innerHTML = "Lista de Adjacências "+grafoJson;
 }
 
