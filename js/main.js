@@ -94,23 +94,14 @@ async function processar() {
     afinar(imageData, w, h);
     //
 
-    let circulos = getCirculos(imageData, w, h);
-    if (circulos) {
-        const rotulosPromises = circulos.map(extrairRotuloDeCirculo);
-        const rotulos = await Promise.all(rotulosPromises);
-        const vertices = circulos.map((circulo, index) => ({ ...circulo, rotulo: rotulos[index] }));
-
-        if (vertices.every((v) => v.rotulo.length == 0)) {
-            vertices.forEach((v, indice) => {
-                v.rotulo = ''+indice;
-            });
-        }
-
+    let vertices = getVertices(imageData, w, h);
+    if (vertices) {
         let arestas = getArestas(imageData, w, h, vertices);
         ctxPre.strokeStyle = 'red';
         ctxPre.lineWidth = 1;
 
         vertices.forEach(v => {
+            console.log(v)
             ctxPre.beginPath();
             ctxPre.arc(v.a, v.b, v.r, 0, 2 * Math.PI);
             ctxPre.fillStyle = "black";
@@ -140,7 +131,7 @@ async function processar() {
 
 }
 
-function getCirculos(imageData, w, h) {
+function getVertices(imageData, w, h) {
     let razaoRaioMax;
     if (radioMin.checked) razaoRaioMax = 19;
     else if (radioPeq.checked) razaoRaioMax = 13;
@@ -173,12 +164,15 @@ function getCirculos(imageData, w, h) {
         let rInt = parseInt(r);
         let candidatos = circulos.filter(c => c.r >= rInt - 2 && c.r <= rInt + 2);
 
-        let semSobreposicao = candidatos.filter((circulo, _, arr) =>
+        let vertices = candidatos.filter((circulo, _, arr) =>
             !arr.some(outro => circulo !== outro && circulosSeInterceptam(circulo, outro) && circulo.r == outro.r)
         );
 
-        if (semSobreposicao.length > 0) {
-            return semSobreposicao;
+        if (vertices.length > 0) {
+            vertices.forEach((c, indice)=>{
+                c.rotulo = ''+indice;
+            })
+            return vertices;
         }
     }
 }
@@ -241,29 +235,6 @@ function getArestas(imageData, w, h, vertices) {
     });
 
     return arestas;
-}
-
-async function extrairRotuloDeCirculo(circulo) {
-    const lado = circulo.r * 0.9 * Math.sqrt(2);
-    const canvasTesseract = document.createElement('canvas');
-    const ctxTesseract = canvasTesseract.getContext('2d');
-
-    canvasTesseract.width = lado;
-    canvasTesseract.height = lado;
-
-    ctxTesseract.drawImage(canvas, circulo.a - lado / 2, circulo.b - lado / 2, lado, lado, 0, 0, lado, lado);
-
-    const imgUrl = canvasTesseract.toDataURL();
-    const worker = await Tesseract.createWorker('eng');
-
-    /*await worker.setParameters({
-        tessedit_char_whitelist: '0123456789',
-    });*/
-
-    const { data: { text } } = await worker.recognize(imgUrl);
-    await worker.terminate();
-
-    return text.trim();
 }
 
 function gerarGrafo(arestas) {
