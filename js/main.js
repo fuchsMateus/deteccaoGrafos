@@ -113,7 +113,6 @@ async function processar() {
         vertices.forEach(v => {
             ctxPre.beginPath();
             ctxPre.arc(v.a, v.b, v.r, 0, 2 * Math.PI);
-            
             ctxPre.fillStyle = "black";
             let tamanhoRotulo = Math.floor(v.r) - 1;
             ctxPre.font = tamanhoRotulo + "px Arial";
@@ -245,7 +244,7 @@ function getArestas(imageData, w, h, vertices) {
 }
 
 async function extrairRotuloDeCirculo(circulo) {
-    const lado = circulo.r * Math.sqrt(2) * 0.9;
+    const lado = circulo.r * 0.9 * Math.sqrt(2);
     const canvasTesseract = document.createElement('canvas');
     const ctxTesseract = canvasTesseract.getContext('2d');
 
@@ -257,9 +256,9 @@ async function extrairRotuloDeCirculo(circulo) {
     const imgUrl = canvasTesseract.toDataURL();
     const worker = await Tesseract.createWorker('eng');
 
-    await worker.setParameters({
+    /*await worker.setParameters({
         tessedit_char_whitelist: '0123456789',
-    });
+    });*/
 
     const { data: { text } } = await worker.recognize(imgUrl);
     await worker.terminate();
