@@ -2,7 +2,6 @@ import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar, removerRotulo
 import { fechamento, afinar } from './op_morfologico.js';
 import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';
 import { aumentarBorda, detectarLinhas, corFundoImg } from './util.js'
-import {Tesseract} from './tesseract.min.js'
 
 
 const maxTamanhoImagem = 480;
