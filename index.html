@@ -5,11 +5,11 @@
   <meta charset="UTF-8">
   <title>Detecção de Grafos</title>
   <link rel="stylesheet" href="css/pico.min.css">
+  <link rel="stylesheet" href="css/style.css">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
 </head>
 
-<body style="background-color: whitesmoke;"> 
+<body style="background-color: whitesmoke;">
   <nav class="container-fluid">
 
     <li><strong>Detecção de Grafos</strong></li>
@@ -25,16 +25,16 @@
 
         <p>Tamanho dos vértices:</p>
         <fieldset style="margin-bottom: 50px;">
-          <input type="radio" id="radio-min" name="tipo-deteccao"/>
+          <input type="radio" id="radio-min" name="tipo-deteccao" />
           <label for="radio-min">Minúsculo</label>
 
-          <input type="radio" id="radio-peq" name="tipo-deteccao"/>
+          <input type="radio" id="radio-peq" name="tipo-deteccao" />
           <label for="radio-peq">Pequeno</label>
 
-          <input type="radio" id="radio-med" name="tipo-deteccao"/>
+          <input type="radio" id="radio-med" name="tipo-deteccao" />
           <label for="radio-med">Médio</label>
 
-          <input type="radio" id="rad-gra" name="tipo-deteccao" checked/>
+          <input type="radio" id="rad-gra" name="tipo-deteccao" checked />
           <label for="rad-gra">Grande</label>
 
         </fieldset>
@@ -54,15 +54,16 @@
         </div>
       </section>
     </div>
+
+    <pre id="lista-adjacencias" hidden></pre>
   </main>
 
-  <pre id="lista-adjacencias"></pre>
 
   <footer class="container">
     <hr>
     <p>Mateus Fuchs</p>
   </footer>
-  
+
   <script type="module" src="js/main.js"></script>
 </body>
 

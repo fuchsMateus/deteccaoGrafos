@@ -1,0 +1,14 @@
+#lista-adjacencias {
+    text-align: left;
+    background-color: #333;
+    margin: auto;
+
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    max-width: 300px;
+    max-height: 300px;
+    overflow: auto;
+}
+
+code {
+    color: white;
+}

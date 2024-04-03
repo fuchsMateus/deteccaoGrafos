@@ -16,6 +16,8 @@ const ctx = canvas.getContext('2d');
 const ctxPre = canvasPre.getContext('2d');
 
 const btnProcessar = document.getElementById('btn-processar');
+const listaAdjacencias = document.getElementById('lista-adjacencias');
+
 
 let img;
 let limiar;
@@ -48,7 +50,7 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
             }
 
             document.getElementById('msg').hidden = true;
-            document.getElementById('lista-adjacencias').innerHTML = '';
+            listaAdjacencias.hidden = true;
 
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -108,7 +110,7 @@ async function processar() {
             let tamanhoRotulo = Math.floor(v.r) - 1;
             ctxPre.font = tamanhoRotulo + "px Arial";
             ctxPre.fillText(v.rotulo, v.a - (tamanhoRotulo * v.rotulo.length) / 4, v.b + (tamanhoRotulo) / 3);
-            
+
             ctxPre.stroke();
         });
 
@@ -122,6 +124,7 @@ async function processar() {
         });
 
         gerarGrafo(arestas);
+        listaAdjacencias.hidden = false;
     }
     else {
         ctxPre.fillStyle = "red";
@@ -169,8 +172,8 @@ function getVertices(imageData, w, h) {
         );
 
         if (vertices.length > 0) {
-            vertices.forEach((c, indice)=>{
-                c.rotulo = ''+indice;
+            vertices.forEach((c, indice) => {
+                c.rotulo = '' + indice;
             })
             return vertices;
         }
@@ -224,13 +227,13 @@ function getArestas(imageData, w, h, vertices) {
         });
 
         if (vInicio !== vFim) {
-                let chaveAresta = [vertices[vInicio].rotulo, vertices[vFim].rotulo].sort().join('-');
-                if (!historicoArestas.has(chaveAresta)) {
-                    historicoArestas.add(chaveAresta);
-                    arestas.push([linha[0], linha[1], vertices[vInicio].rotulo, vertices[vFim].rotulo]);
-                }
-            
-            
+            let chaveAresta = [vertices[vInicio].rotulo, vertices[vFim].rotulo].sort().join('-');
+            if (!historicoArestas.has(chaveAresta)) {
+                historicoArestas.add(chaveAresta);
+                arestas.push([linha[0], linha[1], vertices[vInicio].rotulo, vertices[vFim].rotulo]);
+            }
+
+
         }
     });
 
@@ -252,6 +255,13 @@ function gerarGrafo(arestas) {
         listaAdjacencias[vFim].push(vInicio);
     });
 
-    const grafoJson = JSON.stringify(listaAdjacencias, null, 2);
-    document.getElementById('lista-adjacencias').innerHTML = "Lista de Adjacências " + grafoJson;
+    let resultado = '<code> Lista de Adjacências <i>{</i>\n';
+    for (const chave in listaAdjacencias) {
+        const valores = listaAdjacencias[chave].map((e) => "<b>" + e + "</b>").join(', ');
+
+        resultado += `  <i>"${chave}"</i>: <u>[</u>${valores}<u>]</u>,\n`;
+    }
+    resultado += '<i>}</i> </code>';
+
+    document.getElementById('lista-adjacencias').innerHTML = resultado;
 }
