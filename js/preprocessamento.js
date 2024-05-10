@@ -5,15 +5,15 @@ export function escalaCinza(imageData) {
     for (let i = 0; i < data.length; i += 4) {
         //ITU BT.709
         //Normalizar os valores RGB para 0-1, aplicar o expoente 2.2, multiplicar pelo coeficiente, somar, aplicar o expoente reverso, reverter a normalização.
-        let cinza = Math.min(255,((data[i]/255.0)**2.2*0.2126+(data[i + 1]/255.0)**2.2*0.7152+(data[i + 2]/255.0)**2.2*0.0722)**0.4545*255);
+        let cinza = Math.min(255, ((data[i] / 255.0) ** 2.2 * 0.2126 + (data[i + 1] / 255.0) ** 2.2 * 0.7152 + (data[i + 2] / 255.0) ** 2.2 * 0.0722) ** 0.4545 * 255);
         data[i] = data[i + 1] = data[i + 2] = cinza;
     }
 }
 
-export function suavizacaoGaussiana(imageData, w ,h){
+export function suavizacaoGaussiana(imageData, w, h) {
     let data = imageData.data;
     let gaussData = new Uint8ClampedArray(w * h * 4);
-    
+
     //desvio padrão = 1.4
     let kernel = [
         [2, 4, 5, 4, 2],
@@ -29,9 +29,9 @@ export function suavizacaoGaussiana(imageData, w ,h){
     for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
             let px = (y * w + x) * 4;
-            if(y<dViz || y >= h-dViz || x<dViz || x >= w-dViz){
+            if (y < dViz || y >= h - dViz || x < dViz || x >= w - dViz) {
                 gaussData[px] = gaussData[px + 1] = gaussData[px + 2] = imageData.data[px];
-                gaussData[px + 3] = 255; 
+                gaussData[px + 3] = 255;
                 continue;
             }
             let soma = 0;
@@ -43,19 +43,19 @@ export function suavizacaoGaussiana(imageData, w ,h){
                 }
             }
 
-            let novoValor = soma/den;
+            let novoValor = soma / den;
 
-            gaussData[px] = gaussData[px + 1] = gaussData[px + 2] = novoValor; 
-            gaussData[px + 3] = 255; 
+            gaussData[px] = gaussData[px + 1] = gaussData[px + 2] = novoValor;
+            gaussData[px + 3] = 255;
         }
     }
-    
+
     for (let i = 0; i < gaussData.length; i++) {
         data[i] = gaussData[i];
     }
 }
 
-export function filtroSobel(imageData, w ,h) {
+export function filtroSobel(imageData, w, h) {
     let data = imageData.data;
     let sobelData = new Uint8ClampedArray(w * h * 4);
 
@@ -88,8 +88,8 @@ export function filtroSobel(imageData, w ,h) {
 
             let magnitude = Math.round(Math.sqrt(gx * gx + gy * gy));
 
-            sobelData[px] = sobelData[px + 1] = sobelData[px + 2] = magnitude; 
-            sobelData[px + 3] = 255; 
+            sobelData[px] = sobelData[px + 1] = sobelData[px + 2] = magnitude;
+            sobelData[px + 3] = 255;
         }
     }
 
@@ -98,23 +98,36 @@ export function filtroSobel(imageData, w ,h) {
     }
 }
 
-export function binarizar(imageData, limiar){
+export function binarizar(imageData, w, h) {
+    let limiar = limiarGlobal(imageData, w, h);
     const data = imageData.data;
 
     for (let i = 0; i < data.length; i += 4) {
-        if(data[i] >= limiar){
+        if (data[i] >= limiar) {
             data[i] = data[i + 1] = data[i + 2] = 255;
         }
-        else{
+        else {
             data[i] = data[i + 1] = data[i + 2] = 0;
         }
     }
 }
 
-export function removerRotulos(imageData, w, h){
+export function inverterCores(imageData) {
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        if (data[i] == 0) {
+            data[i] = data[i + 1] = data[i + 2] = 255;
+        }
+        else {
+            data[i] = data[i + 1] = data[i + 2] = 0;
+        }
+    }
+}
+
+export function removerRotulos(imageData, w, h) {
     let cor = corContornoImgBinaria(imageData);
     let rotulos = detectarComponentesConectados(imageData, w, h, cor);
-
     let contagemRotulos = {};
     rotulos.forEach(rotulo => {
         contagemRotulos[rotulo] = (contagemRotulos[rotulo] || 0) + 1;
@@ -123,11 +136,40 @@ export function removerRotulos(imageData, w, h){
     let rotulosOrdenados = Object.entries(contagemRotulos).sort((a, b) => b[1] - a[1]);
     let rotuloMaisFrequente = rotulosOrdenados[1][0];
 
+
     let data = imageData.data;
     for (let i = 0; i < w * h; i++) {
         if (rotulos[i] != rotuloMaisFrequente) {
-            data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 255-cor; 
+            data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 255 - cor;
             data[i * 4 + 3] = 255;
         }
     }
 }
+
+function limiarGlobal(imageData, w, h) {
+    const data = imageData.data;
+    let t = 128;
+    let g1 = 0, g2 = 0;
+    let sg1 = 0, sg2 = 0;
+    while (true) {
+        g1 = g2 = sg1 = sg2 = 0;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                let tData = data[(y * w + x) * 4];
+                if (tData > t) {
+                    g1 += tData;
+                    sg1++;
+                }
+                else {
+                    g2 += tData;
+                    sg2++;
+                }
+            }
+        }
+        let novoT = Math.round(((g1 / sg1) + (g2 / sg2)) / 2);
+        if (Math.abs(novoT - t) <= 3) return novoT;
+        else t = novoT;
+    }
+}
+
+

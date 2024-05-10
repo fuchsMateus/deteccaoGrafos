@@ -1,7 +1,7 @@
-import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar, removerRotulos } from './preprocessamento.js';
+import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar, removerRotulos, inverterCores } from './preprocessamento.js';
 import { fechamento, afinar } from './op_morfologico.js';
 import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';
-import { aumentarBorda, detectarLinhas, corFundoImg } from './util.js'
+import { aumentarBorda, detectarLinhas, corFundoImg, corContornoImgBinaria } from './util.js'
 
 
 const maxTamanhoImagem = 480;
@@ -20,14 +20,6 @@ const listaAdjacencias = document.getElementById('lista-adjacencias');
 
 
 let img;
-let limiar;
-const inputLb = document.getElementById('input-lb');
-
-function rangeListener() {
-    document.getElementById('label-lb').innerText = `Limiar de Binarização = ${inputLb.value}`;
-}
-rangeListener();
-inputLb.addEventListener('input', rangeListener);
 
 document.getElementById('input-imagem').addEventListener('change', function (e) {
     let reader = new FileReader();
@@ -84,26 +76,30 @@ async function processar() {
     const h = canvas.height;
     ctxPre.clearRect(0, 0, w, h);
     let imageData = ctx.getImageData(0, 0, w, h);
-    limiar = inputLb.value;
     //Pré-processamento
     escalaCinza(imageData);
-    binarizar(imageData, limiar);
+    binarizar(imageData, w, h);
     removerRotulos(imageData, w, h);
+    let imageDataArestas = new ImageData(new Uint8ClampedArray(imageData.data), w, h);
     suavizacaoGaussiana(imageData, w, h);
     filtroSobel(imageData, w, h);
-    binarizar(imageData, limiar);
+    binarizar(imageData, w, h);
     fechamento(imageData, w, h);
     afinar(imageData, w, h);
     //
 
+
+    if (corContornoImgBinaria(imageDataArestas) == 0) inverterCores(imageDataArestas);
+    afinar(imageDataArestas, w, h);
+
+
     let vertices = getVertices(imageData, w, h);
     if (vertices) {
-        let arestas = getArestas(imageData, w, h, vertices);
+        let arestas = getArestas(imageDataArestas, w, h, vertices);
         ctxPre.strokeStyle = 'red';
         ctxPre.lineWidth = 1;
 
         vertices.forEach(v => {
-            console.log(v)
             ctxPre.beginPath();
             ctxPre.arc(v.a, v.b, v.r, 0, 2 * Math.PI);
             ctxPre.fillStyle = "black";
@@ -125,12 +121,14 @@ async function processar() {
 
         gerarGrafo(arestas);
         listaAdjacencias.hidden = false;
+
     }
     else {
         ctxPre.fillStyle = "red";
         ctxPre.font = "10px Arial";
         ctxPre.fillText("Nenhum vértice encontrado.", (w / 2) - 17, (h / 2) + 8);
     }
+
 
 }
 
@@ -194,14 +192,20 @@ function getArestas(imageData, w, h, vertices) {
 
     vertices.forEach(v => {
         ctxTemp.beginPath();
-        ctxTemp.arc(v.a, v.b, v.r + 50 / v.r, 0, 2 * Math.PI);
+        if (radioMin.checked) ctxTemp.arc(v.a, v.b, v.r + 35 / v.r, 0, 2 * Math.PI);
+        else if (radioPeq.checked) ctxTemp.arc(v.a, v.b, v.r + 50 / v.r, 0, 2 * Math.PI);
+        else if (radioMed.checked) ctxTemp.arc(v.a, v.b, v.r + 70 / v.r, 0, 2 * Math.PI);
+        else ctxTemp.arc(v.a, v.b, v.r + 120 / v.r, 0, 2 * Math.PI);
+        
         ctxTemp.fill();
         ctxTemp.stroke();
     });
 
     let lData = ctxTemp.getImageData(0, 0, w, h);
-    binarizar(lData, limiar);
+    binarizar(lData, w, h);
+    //ctx.putImageData(lData, 0, 0);
     let linhas = detectarLinhas(lData, w, h);
+    //console.log(linhas)
     let arestas = [];
     let historicoArestas = new Set();
 

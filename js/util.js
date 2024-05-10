@@ -209,28 +209,30 @@ export function detectarLinhas(imageData, w, h) {
                 }
 
                 function atualizarPlacar(vizinhoEscolhido) {
-
+                    let incremento = 2;
+                    if (placar[vizinhoEscolhido] > 20) incremento+=2;
+                    else if (placar[vizinhoEscolhido] > 10) incremento+=1;
                     if (vizinhoEscolhido === 'sudeste') {
-                        placar[vizinhoEscolhido] += 2;
+                        placar[vizinhoEscolhido] += incremento;
                         placar['sul']++;
                         placar['leste']++;
                     }
                     else if (vizinhoEscolhido === 'sudoeste') {
-                        placar[vizinhoEscolhido] += 2;
+                        placar[vizinhoEscolhido] += incremento;
                         placar['sul']++;
                         placar['oeste']++;
                     }
                     else if (vizinhoEscolhido === 'nordeste') {
-                        placar[vizinhoEscolhido] += 2;
+                        placar[vizinhoEscolhido] += incremento;
                         placar['norte']++;
                         placar['leste']++;
                     }
                     else if (vizinhoEscolhido === 'noroeste') {
-                        placar[vizinhoEscolhido] += 2;
+                        placar[vizinhoEscolhido] += incremento;
                         placar['norte']++;
                         placar['oeste']++;
                     }
-                    else placar[vizinhoEscolhido] += 2;
+                    else placar[vizinhoEscolhido] += incremento;
                 }
 
 
@@ -297,6 +299,7 @@ export function detectarLinhas(imageData, w, h) {
 
                 atualizarPlacar(vizinhos[0]);
                 atualizarPodio();
+                
                 let vizinhoEscolhido = posicoesPodio[0];
 
                 function atualizarPAtual() {
