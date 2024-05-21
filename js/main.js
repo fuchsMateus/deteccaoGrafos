@@ -92,7 +92,6 @@ async function processar() {
     if (corContornoImgBinaria(imageDataArestas) == 0) inverterCores(imageDataArestas);
     afinar(imageDataArestas, w, h);
 
-
     let vertices = getVertices(imageData, w, h);
     if (vertices) {
         let arestas = getArestas(imageDataArestas, w, h, vertices);
@@ -145,15 +144,15 @@ function getVertices(imageData, w, h) {
     if (picos.length == 0) return;
     let circulos = [];
     let valoresRaios = {}
+    let somaRaios = 0
     picos.forEach(pico => {
         let [r, b, a] = pico;
-
         if (valoresRaios[r] == null) valoresRaios[r] = 1;
         else valoresRaios[r]++
-
+        somaRaios+=r
         circulos.push({ r, b, a });
     });
-
+    let mediaRaios = somaRaios/circulos.length
     let raiosOrdenados = Object.entries(valoresRaios).sort((a, b) => b[1] - a[1]);
 
     function circulosSeInterceptam(c1, c2) {
@@ -161,9 +160,13 @@ function getVertices(imageData, w, h) {
         return distanciaCentros < (c1.r + c2.r);
     }
 
-    for (let [r, _] of raiosOrdenados) {
+    for (let [r, quant] of raiosOrdenados) {
         let rInt = parseInt(r);
-        let candidatos = circulos.filter(c => c.r >= rInt - 2 && c.r <= rInt + 2);
+        let tol
+        if(quant==1) tol = rInt+2
+        else if(mediaRaios>r+0.06*r || mediaRaios<r-0.06*r) tol = (rInt/2)+1
+        else tol = Math.ceil(rInt/6)+1
+        let candidatos = circulos.filter(c => c.r >= rInt - tol  && c.r <= rInt + tol);
 
         let vertices = candidatos.filter((circulo, _, arr) =>
             !arr.some(outro => circulo !== outro && circulosSeInterceptam(circulo, outro) && circulo.r == outro.r)
@@ -203,9 +206,7 @@ function getArestas(imageData, w, h, vertices) {
 
     let lData = ctxTemp.getImageData(0, 0, w, h);
     binarizar(lData, w, h);
-    //ctx.putImageData(lData, 0, 0);
     let linhas = detectarLinhas(lData, w, h);
-    //console.log(linhas)
     let arestas = [];
     let historicoArestas = new Set();
 

@@ -381,10 +381,3 @@ export function detectarLinhas(imageData, w, h) {
 
     return linhas;
 }
-
-
-
-
-
-
-

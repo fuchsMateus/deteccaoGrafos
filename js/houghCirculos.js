@@ -45,7 +45,7 @@ export function votacao(acumulador, imageData) {
 export function picosNMS(acumulador, valorMaximo) {
     let picos = [];
 
-    let limiar = Math.round(valorMaximo * 0.4);
+    let limiar = Math.round(valorMaximo * 0.3);
     let tamanhoVizinhanca = Math.ceil(0.02 * Math.sqrt(aMax*aMax + bMax*bMax));
 
     for (let r = 0; r < rMax-rMin+1; r++) {
