@@ -42,10 +42,10 @@ export function votacao(acumulador, imageData) {
     return [acumulador,valorMaximo];
 }
 
-export function picosNMS(acumulador, valorMaximo) {
+export function picosNMS(acumulador, valorMaximo, fatorLimiar) {
     let picos = [];
 
-    let limiar = Math.round(valorMaximo * 0.3);
+    let limiar = Math.round(valorMaximo * fatorLimiar);
     let tamanhoVizinhanca = Math.ceil(0.02 * Math.sqrt(aMax*aMax + bMax*bMax));
 
     for (let r = 0; r < rMax-rMin+1; r++) {

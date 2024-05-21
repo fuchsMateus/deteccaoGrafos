@@ -86,11 +86,14 @@ async function processar() {
     binarizar(imageData, w, h);
     fechamento(imageData, w, h);
     afinar(imageData, w, h);
+    //ctx.putImageData(imageData, 0, 0);
     //
 
 
     if (corContornoImgBinaria(imageDataArestas) == 0) inverterCores(imageDataArestas);
     afinar(imageDataArestas, w, h);
+    //ctx.putImageData(imageDataArestas, 0, 0);
+
 
     let vertices = getVertices(imageData, w, h);
     if (vertices) {
@@ -139,7 +142,10 @@ function getVertices(imageData, w, h) {
     else razaoRaioMax = 6;
 
     const [acumulador, valorMaximo] = votacao(criarAcumulador(w, h, razaoRaioMax), imageData);
-    let picos = picosNMS(acumulador, valorMaximo);
+    let fatorLimiar
+    if (document.getElementById('desenhado').checked) fatorLimiar=0.25
+    else fatorLimiar = 0.4
+    let picos = picosNMS(acumulador, valorMaximo, fatorLimiar);
 
     if (picos.length == 0) return;
     let circulos = [];
@@ -163,9 +169,10 @@ function getVertices(imageData, w, h) {
     for (let [r, quant] of raiosOrdenados) {
         let rInt = parseInt(r);
         let tol
+        //console.log(mediaRaios, raiosOrdenados)
         if(quant==1) tol = rInt+2
-        else if(mediaRaios>r+0.06*r || mediaRaios<r-0.06*r) tol = (rInt/2)+1
-        else tol = Math.ceil(rInt/6)+1
+        else if((mediaRaios>r+0.06*r || mediaRaios<r-0.06*r) && quant<=circulos.length/2) tol = (rInt/2)+1
+        else tol = Math.ceil(rInt/8)+1
         let candidatos = circulos.filter(c => c.r >= rInt - tol  && c.r <= rInt + tol);
 
         let vertices = candidatos.filter((circulo, _, arr) =>
@@ -206,7 +213,9 @@ function getArestas(imageData, w, h, vertices) {
 
     let lData = ctxTemp.getImageData(0, 0, w, h);
     binarizar(lData, w, h);
+    //ctx.putImageData(lData, 0, 0);
     let linhas = detectarLinhas(lData, w, h);
+    //console.log(linhas)
     let arestas = [];
     let historicoArestas = new Set();
 
