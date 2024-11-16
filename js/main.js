@@ -1,7 +1,8 @@
 import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar, removerRotulos, inverterCores } from './preprocessamento.js';
 import { fechamento, afinar } from './op_morfologico.js';
 import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';
-import { aumentarBorda, detectarLinhas, corFundoImg, corContornoImgBinaria } from './util.js'
+import { aumentarBorda, corFundoImg, corContornoImgBinaria } from './util.js'
+import { detectarLinhas} from './detectar_linhas.js'
 
 
 const maxTamanhoImagem = 480;
