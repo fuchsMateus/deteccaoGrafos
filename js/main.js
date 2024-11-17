@@ -98,8 +98,10 @@ async function processar() {
 
 
     let vertices = getVertices(imageData, w, h);
+    
     if (vertices) {
         let arestas = getArestas(imageDataArestas, w, h, vertices);
+        
         ctxPre.strokeStyle = 'red';
         ctxPre.lineWidth = 1;
 
@@ -148,7 +150,7 @@ function getVertices(imageData, w, h) {
     if (document.getElementById('desenhado').checked) fatorLimiar=0.25
     else fatorLimiar = 0.4
     let picos = picosNMS(acumulador, valorMaximo, fatorLimiar);
-
+    
     if (picos.length == 0) return;
     let circulos = [];
     let valoresRaios = {}
