@@ -1,3 +1,4 @@
+//main.js
 import { escalaCinza, suavizacaoGaussiana, filtroSobel, binarizar, removerRotulos, inverterCores } from './preprocessamento.js';
 import { fechamento, afinar } from './op_morfologico.js';
 import { criarAcumulador, votacao, picosNMS } from './houghCirculos.js';

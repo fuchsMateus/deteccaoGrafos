@@ -1,3 +1,4 @@
+//detectar_linhas.js
 let imgW;
 let imgH;
 let data;
@@ -151,23 +152,24 @@ function atualizarPlacar(vizinhoEscolhido) {
     let incremento = 2;
     if (placar[vizinhoEscolhido] > 20) incremento+=2;
     else if (placar[vizinhoEscolhido] > 10) incremento+=1;
+
     if (vizinhoEscolhido === 'sudeste') {
-        placar[vizinhoEscolhido] += incremento;
+        placar[vizinhoEscolhido] += incremento+1;
         placar['sul']++;
         placar['leste']++;
     }
     else if (vizinhoEscolhido === 'sudoeste') {
-        placar[vizinhoEscolhido] += incremento;
+        placar[vizinhoEscolhido] += incremento+1;
         placar['sul']++;
         placar['oeste']++;
     }
     else if (vizinhoEscolhido === 'nordeste') {
-        placar[vizinhoEscolhido] += incremento;
+        placar[vizinhoEscolhido] += incremento+1;
         placar['norte']++;
         placar['leste']++;
     }
     else if (vizinhoEscolhido === 'noroeste') {
-        placar[vizinhoEscolhido] += incremento;
+        placar[vizinhoEscolhido] += incremento+1;
         placar['norte']++;
         placar['oeste']++;
     }

@@ -1,3 +1,4 @@
+//preprocessamento.js
 import { detectarComponentesConectados, corContornoImgBinaria } from "./util.js";
 
 export function escalaCinza(imageData) {

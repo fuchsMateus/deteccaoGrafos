@@ -1,3 +1,4 @@
+//op_morfologico.js
 import { subtracaoImgBinaria, dadosIguais, rotacionarMatrizQuadrada } from './util.js';
 
 function dilatar(imageData, w, h, elementoEstruturante) {

@@ -1,3 +1,4 @@
+//houghCirculos.js
 let rMax = 0;
 let rMin = 1;
 let aMax = 0;

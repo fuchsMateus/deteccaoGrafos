@@ -1,3 +1,4 @@
+//util.js
 export function subtracaoImgBinaria(data1, data2) {
     let subData = new Uint8ClampedArray(data1.length);
 
