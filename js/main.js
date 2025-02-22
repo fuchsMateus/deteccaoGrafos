@@ -22,6 +22,9 @@ const listaAdjacencias = document.getElementById('lista-adjacencias');
 
 
 let img;
+let nome_imagem
+let tamanhoVertice;
+let desenhado;
 
 document.getElementById('input-imagem').addEventListener('change', function (e) {
     let reader = new FileReader();
@@ -71,6 +74,7 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
         img.src = event.target.result;
     };
     reader.readAsDataURL(e.target.files[0]);
+    nome_imagem = e.target.files[0].name;
 });
 
 async function processar() {
@@ -140,14 +144,26 @@ async function processar() {
 
 function getVertices(imageData, w, h) {
     let razaoRaioMax;
-    if (radioMin.checked) razaoRaioMax = 19;
-    else if (radioPeq.checked) razaoRaioMax = 13;
-    else if (radioMed.checked) razaoRaioMax = 9;
-    else razaoRaioMax = 6;
-
+    if (radioMin.checked) {
+         razaoRaioMax = 19;
+         tamanhoVertice = "Minúsculo";
+    }
+    else if (radioPeq.checked) {
+        razaoRaioMax = 13;
+        tamanhoVertice = "Pequeno";
+    }
+    else if (radioMed.checked) {
+        razaoRaioMax = 9;
+        tamanhoVertice = "Médio";
+    }
+    else {
+        razaoRaioMax = 6;
+        tamanhoVertice = "Grande";
+    }
     const [acumulador, valorMaximo] = votacao(criarAcumulador(w, h, razaoRaioMax), imageData);
     let fatorLimiar
-    if (document.getElementById('desenhado').checked) fatorLimiar=0.25
+    desenhado = document.getElementById('desenhado').checked
+    if (desenhado) fatorLimiar=0.25
     else fatorLimiar = 0.4
     let picos = picosNMS(acumulador, valorMaximo, fatorLimiar);
     
@@ -273,13 +289,24 @@ function gerarGrafo(arestas) {
         listaAdjacencias[vFim].push(vInicio);
     });
 
-    let resultado = '<code> Lista de Adjacências <i>{</i>\n';
+    let resultado = '<code> "' + nome_imagem + '" : <i>{</i>\n';
+    resultado += '  <i>"tamanhoVertice"</i>: <b>"' + tamanhoVertice + '"</b>,\n';
+    resultado += '  <i>"desenhado"</i>: <b>' + desenhado + '</b>,\n';
+    resultado += '  <i>"listaAdj"</i>: <i>{</i>\n';
+    
+    let tamChaves = Object.keys(listaAdjacencias).length;
     for (const chave in listaAdjacencias) {
-        const valores = listaAdjacencias[chave].map((e) => "<b>" + e + "</b>").join(', ');
-
-        resultado += `  <i>"${chave}"</i>: <u>[</u>${valores}<u>]</u>,\n`;
+        const valores = listaAdjacencias[chave].map((e) => "<b>\"" + e + "\"</b>").join(', ');
+        tamChaves--;
+        if (tamChaves != 0) {
+            resultado += `    <i>"${chave}"</i>: <u>[</u>${valores}<u>]</u>,\n`;
+        } else {
+            resultado += `    <i>"${chave}"</i>: <u>[</u>${valores}<u>]</u>\n`;
+        }
     }
+    resultado += '  <i>}</i>\n';
     resultado += '<i>}</i> </code>';
-
+    
     document.getElementById('lista-adjacencias').innerHTML = resultado;
+    
 }
