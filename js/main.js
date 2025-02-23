@@ -13,8 +13,12 @@ const radioPeq = document.getElementById('radio-peq');
 const radioMed = document.getElementById('radio-med');
 
 const canvas = document.getElementById('imagem-canvas');
+const canvasBin = document.getElementById('escala-cinza-canvas')
+const canvasAfinado = document.getElementById('afinado-canvas')
 const canvasPre = document.getElementById('preprocessamento-canvas')
 const ctx = canvas.getContext('2d');
+const ctxBin = canvasBin.getContext('2d');
+const ctxAfinado = canvasAfinado.getContext('2d');
 const ctxPre = canvasPre.getContext('2d');
 
 const btnProcessar = document.getElementById('btn-processar');
@@ -56,6 +60,14 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
             let cor = corFundoImg(ctx.getImageData(0, 0, canvas.width, canvas.height), canvas.width, canvas.height);
             aumentarBorda(canvas, `rgb(${cor[0]},${cor[1]},${cor[2]})`);
 
+            canvasBin.width = canvas.width;
+            canvasBin.height = canvas.height;
+            ctxBin.clearRect(0, 0, canvas.width, canvas.height);
+
+            canvasAfinado.width = canvas.width;
+            canvasAfinado.height = canvas.height;
+            ctxAfinado.clearRect(0, 0, canvas.width, canvas.height);
+
             canvasPre.width = canvas.width;
             canvasPre.height = canvas.height;
             ctxPre.clearRect(0, 0, canvas.width, canvas.height);
@@ -85,6 +97,7 @@ async function processar() {
     //Pré-processamento
     escalaCinza(imageData);
     binarizar(imageData, w, h);
+    ctxBin.putImageData(imageData, 0, 0);
     removerRotulos(imageData, w, h);
     let imageDataArestas = new ImageData(new Uint8ClampedArray(imageData.data), w, h);
     suavizacaoGaussiana(imageData, w, h);
@@ -92,7 +105,7 @@ async function processar() {
     binarizar(imageData, w, h);
     fechamento(imageData, w, h);
     afinar(imageData, w, h);
-    //ctx.putImageData(imageData, 0, 0);
+    ctxAfinado.putImageData(imageData, 0, 0);
     //
 
 
