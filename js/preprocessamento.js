@@ -100,14 +100,13 @@ export function filtroSobel(imageData, w, h) {
 }
 
 export function binarizar(imageData, w, h) {
-    let limiar = limiarGlobal(imageData, w, h);
+    const limiar = otsuThreshold(imageData, w, h);
     const data = imageData.data;
 
     for (let i = 0; i < data.length; i += 4) {
         if (data[i] >= limiar) {
             data[i] = data[i + 1] = data[i + 2] = 255;
-        }
-        else {
+        } else {
             data[i] = data[i + 1] = data[i + 2] = 0;
         }
     }
@@ -150,27 +149,91 @@ export function removerRotulos(imageData, w, h) {
 function limiarGlobal(imageData, w, h) {
     const data = imageData.data;
     let t = 128;
-    let g1 = 0, g2 = 0;
-    let sg1 = 0, sg2 = 0;
+    const maxIterations = 100;
+    let iterations = 0;
+
     while (true) {
-        g1 = g2 = sg1 = sg2 = 0;
+        let g1 = 0, g2 = 0;
+        let sg1 = 0, sg2 = 0;
         for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
-                let tData = data[(y * w + x) * 4];
+                const index = (y * w + x) * 4;
+                const tData = data[index]; 
                 if (tData > t) {
                     g1 += tData;
                     sg1++;
-                }
-                else {
+                } else {
                     g2 += tData;
                     sg2++;
                 }
             }
         }
-        let novoT = Math.round(((g1 / sg1) + (g2 / sg2)) / 2);
-        if (Math.abs(novoT - t) <= 3) return novoT;
-        else t = novoT;
+
+        const media1 = sg1 > 0 ? g1 / sg1 : 0;
+        const media2 = sg2 > 0 ? g2 / sg2 : 0;
+        const novoT = Math.round((media1 + media2) / 2);
+
+        if (Math.abs(novoT - t) <= 3) {
+            return novoT;
+        } else {
+            t = novoT;
+        }
+
+        iterations++;
+        if (iterations >= maxIterations) {
+            return t;
+        }
     }
+}
+
+function otsuThreshold(imageData, w, h) {
+    const data = imageData.data;
+    const totalPixels = w * h;
+  
+    const hist = new Array(256).fill(0);
+  
+    for (let i = 0; i < data.length; i += 4) {
+      const gray = data[i];
+      hist[gray]++;
+    }
+
+    let sum = 0;
+    for (let t = 0; t < 256; t++) {
+      sum += t * hist[t];
+    }
+  
+    let sumB = 0;       
+    let wB = 0;         
+    let wF = 0;         
+    let varMax = 0;     
+    let threshold = 0;  
+  
+    for (let t = 0; t < 256; t++) {
+      wB += hist[t];
+      if (wB === 0) {
+        continue;
+      }
+  
+      wF = totalPixels - wB;
+      if (wF === 0) {
+        break;
+      }
+  
+      sumB += t * hist[t];
+  
+      const mB = sumB / wB;
+  
+      const mF = (sum - sumB) / wF;
+  
+      const varBetween = wB * wF * Math.pow(mB - mF, 2);
+  
+      if (varBetween > varMax) {
+        varMax = varBetween;
+        threshold = t;
+      }
+    }
+    if (threshold === 0 || threshold === 255) return 128;
+    return threshold;
 }
 
 

@@ -108,7 +108,6 @@ async function processar() {
     ctxAfinado.putImageData(imageData, 0, 0);
     //
 
-
     if (corContornoImgBinaria(imageDataArestas) == 0) inverterCores(imageDataArestas);
     afinar(imageDataArestas, w, h);
     //ctx.putImageData(imageDataArestas, 0, 0);
