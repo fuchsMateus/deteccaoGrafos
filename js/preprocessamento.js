@@ -100,7 +100,7 @@ export function filtroSobel(imageData, w, h) {
 }
 
 export function binarizar(imageData, w, h) {
-    const limiar = otsuThreshold(imageData, w, h);
+    const limiar = limiarGlobal(imageData, w, h);
     const data = imageData.data;
 
     for (let i = 0; i < data.length; i += 4) {
@@ -148,11 +148,14 @@ export function removerRotulos(imageData, w, h) {
 
 function limiarGlobal(imageData, w, h) {
     const data = imageData.data;
-    let t = 128;
-    const maxIterations = 100;
+    
+    
+    let t = otsuThreshold(imageData, w, h);
+    console.log("t init =", t);
+    const maxIterations = 10;
     let iterations = 0;
 
-    while (true) {
+    while (iterations < maxIterations) {
         let g1 = 0, g2 = 0;
         let sg1 = 0, sg2 = 0;
         for (let y = 0; y < h; y++) {
@@ -169,21 +172,20 @@ function limiarGlobal(imageData, w, h) {
             }
         }
 
-        const media1 = sg1 > 0 ? g1 / sg1 : 0;
-        const media2 = sg2 > 0 ? g2 / sg2 : 0;
+        const media1 = sg1 > 0 ? g1 / sg1 : t;
+        const media2 = sg2 > 0 ? g2 / sg2 : t;
         const novoT = Math.round((media1 + media2) / 2);
 
-        if (Math.abs(novoT - t) <= 3) {
+        if (Math.abs(novoT - t) <= 1) {
+            console.log(novoT, iterations)
             return novoT;
         } else {
             t = novoT;
         }
 
         iterations++;
-        if (iterations >= maxIterations) {
-            return t;
-        }
     }
+    return t;
 }
 
 function otsuThreshold(imageData, w, h) {

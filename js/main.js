@@ -303,7 +303,7 @@ function gerarGrafo(arestas) {
 
     let resultado = '<code> "' + nome_imagem + '" : <i>{</i>\n';
     resultado += '  <i>"tamanhoVertice"</i>: <b>"' + tamanhoVertice + '"</b>,\n';
-    resultado += '  <i>"desenhado"</i>: <b>' + desenhado + '</b>,\n';
+    resultado += '  <i>"toleranciaAumentada"</i>: <b>' + desenhado + '</b>,\n';
     resultado += '  <i>"listaAdj"</i>: <i>{</i>\n';
     
     let tamChaves = Object.keys(listaAdjacencias).length;
