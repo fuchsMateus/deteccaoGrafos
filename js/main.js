@@ -89,6 +89,69 @@ document.getElementById('input-imagem').addEventListener('change', function (e) 
     nome_imagem = e.target.files[0].name;
 });
 
+document.addEventListener('paste', function(e) {
+    const clipboardItems = e.clipboardData.items;
+    for (let i = 0; i < clipboardItems.length; i++) {
+        if (clipboardItems[i].type.indexOf("image") !== -1) {
+            const file = clipboardItems[i].getAsFile();
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(event) {
+                    img = new Image();
+                    img.onload = function () {
+                        let razao = img.height / img.width;
+                        if (img.height > maxTamanhoImagem || img.width > maxTamanhoImagem) {
+                            if (razao > 1) {
+                                canvas.height = maxTamanhoImagem;
+                                canvas.width = maxTamanhoImagem / razao;
+                            } else {
+                                canvas.width = maxTamanhoImagem;
+                                canvas.height = maxTamanhoImagem * razao;
+                            }
+                        } else {
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                        }
+
+                        document.getElementById('msg').hidden = true;
+                        listaAdjacencias.hidden = true;
+
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        let cor = corFundoImg(ctx.getImageData(0, 0, canvas.width, canvas.height), canvas.width, canvas.height);
+                        aumentarBorda(canvas, `rgb(${cor[0]},${cor[1]},${cor[2]})`);
+
+                        canvasBin.width = canvas.width;
+                        canvasBin.height = canvas.height;
+                        ctxBin.clearRect(0, 0, canvas.width, canvas.height);
+
+                        canvasAfinado.width = canvas.width;
+                        canvasAfinado.height = canvas.height;
+                        ctxAfinado.clearRect(0, 0, canvas.width, canvas.height);
+
+                        canvasPre.width = canvas.width;
+                        canvasPre.height = canvas.height;
+                        ctxPre.clearRect(0, 0, canvas.width, canvas.height);
+
+                        btnProcessar.onclick = () => {
+                            btnProcessar.setAttribute('aria-busy', 'true');
+                            setTimeout(() => {
+                                processar()
+                                    .finally(() => {
+                                        btnProcessar.removeAttribute('aria-busy');
+                                    });
+                            }, 10);
+                        };
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+    }
+});
+
 async function processar() {
     const w = canvas.width;
     const h = canvas.height;
